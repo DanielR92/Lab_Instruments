@@ -1,4 +1,4 @@
-# Fluke 8845A Multimeter Steuerung
+# Lab Instrument automation Fluke 8845A Multimeter controller
 
 Dies ist eine Python-basierte Bibliothek zur Steuerung des Fluke 8845A Multimeters. Sie ermöglicht die Kommunikation mit dem Gerät über verschiedene Schnittstellen (GPIB, seriell, TCPIP) und bietet eine Vielzahl von Funktionen zur Messung und Konfiguration des Multimeters.
 
