@@ -14,7 +14,7 @@ Dies ist eine Python-basierte Bibliothek zur Steuerung des Fluke 8845A Multimete
 1. Klone das Repository:
 
     ```bash
-    git clone https://github.com/deinbenutzername/fluke-8845a-multimeter.git
+    git clone https://github.com/DanielR92/Lab_Instruments.git
     ```
 
 2. Installiere die benötigten Python-Pakete:
