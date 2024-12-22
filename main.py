@@ -9,15 +9,16 @@ instruments = Instruments()
 
 try:
     # Dynamisch das Gerät laden und verwenden
-    # fluke_device_class = instruments.get_device('Instruments.DMM.Fluke.DMM_8845A')
-    # fluke_device = fluke_device_class(interface_type="GPIB", interface_info={'address': 1}, ID=1)
-    
-    #fluke_device.identification()
+    fluke_device_class = instruments.get_device('Instruments.DMM.Fluke.DMM_8845A')
+    fluke_device = fluke_device_class(interface_type="GPIB", interface_info={'address': 1}, ID=1)
 
     powersupply_device_class = instruments.get_device('Instruments.PowerSupply.RS310P')
     powersupply_device = powersupply_device_class(interface_type="Serial", interface_info={'port': "COM18"})
 
+
     powersupply_device.set_voltage(5.0)
+    status = powersupply_device.getOutput()
+    print(status)
 
     # Überprüfe, ob bestimmte Kombinationen erlaubt sind
 #    print(fluke_device.is_combination_allowed("Null", "DCV"))  # Sollte 'Yes' zurückgeben
@@ -48,5 +49,5 @@ except Exception as e:      # works on python 3.x
 
 finally:
     # Gerät trennen
-#    fluke_device.disconnect()
+    fluke_device.disconnect()
     powersupply_device.disconnect()
