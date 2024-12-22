@@ -109,6 +109,16 @@ class Device:
 
 
     ### WRITE REGS ###
+    def setLConfig(self, volt, current, OVP, OCP, OPP, output=1):
+        """@brief Set the PSU configuration.
+        @param value The configuration value."""
+        self.setVoltage(volt)
+        self.setCurrentLimit(current)
+        self.setOverVoltageP(OVP)
+        self.setOverCurrentP(OCP)
+        self.setOverPowerP(OPP)
+        self.setOutput(output)
+
     def setOutput(self, on):
         """@brief Set The PSU output on/off.
         @param on If True the PSU output is on."""
@@ -157,7 +167,7 @@ class Device:
     def getProtectionState(self):
         """@brief Get the state of the protections switch.
            @return 1 if protection mode is enabled, else 0."""
-        rr = self._client.read_register(self.PROTECTION_STATE_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        rr = self._client.read_holding_registers(self.PROTECTION_STATE_REG_ADDR, 1, unit=self._unit, slave=self.slave)
         return rr.getRegister(0)
 
     def getModel(self):
@@ -172,7 +182,7 @@ class Device:
                    0: voltage
                    1: amps
                    2: watts"""
-        rr = self._client.read_register(self.OUTPUT_VOLTAGE_REG_ADDR, 4, unit=self._unit, slave=self.slave)
+        rr = self._client.read_holding_registers(self.OUTPUT_VOLTAGE_REG_ADDR, 4, unit=self._unit, slave=self.slave)
         voltage = float(rr.getRegister(0))
         if voltage > 0:
             voltage=voltage/100.0
@@ -189,7 +199,7 @@ class Device:
     def getTargetVolts(self):
         """@brief Read the target output voltage
            @return The output voltage set in volts."""
-        rr = self._client.read_register(self.VOLTAGE_TARGET_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        rr = self._client.read_holding_registers(self.VOLTAGE_TARGET_REG_ADDR, 1, unit=self._unit, slave=self.slave)
         voltage = float(rr.getRegister(0))
         if voltage > 0:
             voltage=voltage/100.0
@@ -198,7 +208,7 @@ class Device:
     def getCurrentLimit(self):
         """@brief Read the current limit in amps
            @return The current limit."""
-        rr = self._client.read_register(self.CURRENT_LIMIT_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        rr = self._client.read_holding_registers(self.CURRENT_LIMIT_REG_ADDR, 1, unit=self._unit, slave=self.slave)
         amps = float(rr.getRegister(0))
         if amps > 0:
             amps=amps/1000.0
@@ -210,7 +220,7 @@ class Device:
                    0: over voltage protection value
                    1: over current protection value
                    2: over power protection value"""
-        rr = self._client.read_register(self.OVER_VOLTAGE_PROT_REG_ADDR, 4, unit=self._unit, slave=self.slave)
+        rr = self._client.read_holding_registers(self.OVER_VOLTAGE_PROT_REG_ADDR, 4, unit=self._unit, slave=self.slave)
         voltage = float(rr.getRegister(0))
         if voltage > 0:
             voltage=voltage/100.0
@@ -227,5 +237,5 @@ class Device:
     def getBuzzer(self):
         """@brief Get the state of the buzzer
            @return 1 if enabled, 0 if disabled."""
-        rr = self._client.read_register(self.BUZZER_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        rr = self._client.read_holding_registers(self.BUZZER_REG_ADDR, 1, unit=self._unit, slave=self.slave)
         return rr.getRegister(0)
