@@ -140,6 +140,15 @@ class Device:
 
         self.interface.write(mode)
         print(f"Modus auf {mode} gesetzt.")
+    
+    def set_Local(self):
+        self.set_mode("SYST:LOC")
+
+    def set_Beep(self, mode):
+        if (mode):
+            self.set_mode("SYST:BEEP:STAT ON")
+        else:
+            self.set_mode("SYST:BEEP:STAT OFF")
 
     # Führt eine Messung durch
     def _get(self, mode):

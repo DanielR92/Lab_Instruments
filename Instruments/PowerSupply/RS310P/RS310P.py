@@ -63,41 +63,86 @@ class Device:
     OVER_PWR_PROT_LOW_REG_ADDR  = 0x0023    #Bottom 16 bits of over power protection
     BUZZER_REG_ADDR             = 0x8804    # 1 = enable (beep on key press), 0 = disable
 
-    def __init__(self, interface_type, interface_info, ID=1):
+    def __init__(self, interface_type, interface_info, ID=1, slave=1):
         self._unit = ID
+        self.slave= slave
 
         # Verwende das interface_info Dictionary für den Aufbau der Schnittstelle
         if interface_type == "Serial":
             from Instruments.communication.serial import SerialInterface
             interface_info.update({'baudrate': 9600, 'protocol': 'rtu'})
-            self.interface = SerialInterface(**interface_info)
+            self._client = SerialInterface(**interface_info)
         else:
             raise ValueError(f"Unbekannter Schnittstellentyp: {interface_type}")
         self._connect()
 
     def _connect(self):
         """@brief connect to the PSU over the serial port."""
-        self.interface = ModbusSerialClient(method='rtu', port=self.interface.port, baudrate=9600, stopbits=1, bytesize=8, timeout=1) 
-        self.interface.connect()
+        self._client = ModbusSerialClient(method='rtu', port=self._client.port, baudrate=9600, stopbits=1, bytesize=8, timeout=1) 
+        self._client.connect()
 
     def disconnect(self):
         """Trennt die Verbindung zum Gerät."""
-        self.interface.disconnect()
+        self._client.disconnect()
         print("Verbindung zum Gerät getrennt.")
 
-    def set_voltage(self, voltage):
-        try:
-            self.logger.info(f"Setze Spannung auf {voltage} V.")
-            self.interface.write_register(Device.VOLTAGE_TARGET_REG_ADDR, int(voltage * 100), unit=self._unit)
-        except Exception as e:
-            self.logger.error(f"Fehler beim Setzen der Spannung: {e}")
-            raise
-
     def get_actual_voltage(self):
-        raw_value = self.interface.read_holding_registers(self.OUTPUT_VOLTAGE_REG_ADDR, slave=1)
-        return raw_value[0] / 100.0  # Annahme: Antwort in 0.01 V Schritten
+        raw_value = self._client.read_holding_registers(self.OUTPUT_VOLTAGE_REG_ADDR, slave=1)
+        return raw_value.getRegister(0) / 100.0  # Annahme: Antwort in 0.01 V Schritten
     
+    def setCurrentLimit(self, amps):
+        """@brief Set the current limit value.
+        @param amps The current in amps (a float value)."""
+        if amps < 0.0 or amps > self.MAX_CURRENT:
+            raise ValueError("{} is an invalid current value (valid range 0A - {}A)".format(amps, self.MAX_CURRENT))
+        self._client.write_register(self.CURRENT_LIMIT_REG_ADDR , int(amps*1000.0), unit=self._unit, slave=self.slave)
 
+
+    def setVoltage(self, voltage):
+        """@brief Set the output voltage.
+        @param voltage The voltage in volts (a float value)."""
+        if voltage < self.MIN_VOLTAGE or voltage > self.MAX_VOLTAGE:
+            raise ValueError("{} is an invalid voltage (valid range {}V - {}V)".format(voltage, self.MIN_VOLTAGE, self.MAX_VOLTAGE))
+        self._client.write_register(self.VOLTAGE_TARGET_REG_ADDR , int(voltage*100.0), unit=self._unit, slave=self.slave)
+
+
+
+
+    ### WRITE REGS ###
+    def setOutput(self, on):
+        """@brief Set The PSU output on/off.
+        @param on If True the PSU output is on."""
+        self._client.write_register(self.OUTPUT_STATE_REG_ADDR , on, unit=self._unit, slave=1)
+
+    def setOverVoltageP(self, voltage):
+        """@brief Set the over voltage protection value.
+        @param voltage The voltage in volts (a float value)."""
+        if voltage < self.MIN_VOLTAGE or voltage > self.MAX_OVER_VOLTAGE:
+            raise ValueError("{} is an invalid voltage (valid range {}V - {}V)".format(voltage, self.MIN_VOLTAGE, self.MAX_VMAX_OVER_VOLTAGEOLTAGE))
+        self._client.write_register(self.OVER_VOLTAGE_PROT_REG_ADDR , int(voltage*100.0), unit=self._unit, slave=self.slave)
+
+    def setOverCurrentP(self, amps):
+        """@brief Set the over current protection value.
+        @param amps The current in amps (a float value)."""
+        if amps < 0.0 or amps > self.MAX_OVER_CURRENT:
+            raise ValueError("{} is an invalid voltage (valid range 0V - {}V)".format(amps, self.MAX_OVER_CURRENT))
+        self._client.write_register(self.OVER_CURRENT_PROT_REG_ADDR , int(amps*1000.0), unit=self._unit, slave=self.slave)
+
+    def setOverPowerP(self, watts):
+        """@brief Set the over power protection value.
+        @param watts The power in watts (a float value)."""
+        if watts < 0.0 or watts > self.MAX_OVER_POWER:
+            raise ValueError("{} is an invalid power (valid range 0W - {}W)".format(watts, self.MAX_OVER_POWER))
+        wattValue = int((watts*1000))
+        wattsL = wattValue&0x0000ffff
+        wattsH = (wattValue&0xffff0000)>>16
+        self._client.write_register(self.OVER_PWR_PROT_HI_REG_ADDR , wattsH, unit=self._unit, slave=self.slave)
+        self._client.write_register(self.OVER_PWR_PROT_LOW_REG_ADDR , wattsL, unit=self._unit, slave=self.slave)
+
+    def setBuzzer(self, on):
+        """@brief Set the buzzer on/off.
+        @param on If True the buzzer is set on, 0 = off."""
+        self._client.write_register(self.BUZZER_REG_ADDR , on, unit=self._unit, slave=self.slave)
 
 
 
@@ -106,139 +151,81 @@ class Device:
     def getOutput(self):
         """@brief Get the state of the PSU output.
            @return 1 if the output is on, else 0."""
-        rr = self.interface.read_input_registers(self.OUTPUT_STATE_REG_ADDR, 1, unit=self._unit)
-        # rr = self.interface.read_holding_registers(self.OUTPUT_STATE_REG_ADDR, 1, unit=self._unit)
-        return rr
+        rr = self._client.read_holding_registers(self.OUTPUT_STATE_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        return rr.getRegister(0)
     
+    def getProtectionState(self):
+        """@brief Get the state of the protections switch.
+           @return 1 if protection mode is enabled, else 0."""
+        rr = self._client.read_register(self.PROTECTION_STATE_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        return rr.getRegister(0)
 
+    def getModel(self):
+        """@brief Get the model ID
+           @return The model ID value"""
+        rr = self._client.read_holding_registers(self.MODEL_ID_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        return rr.getRegister(0)
 
+    def getOutputStats(self):
+        """@brief Read the output voltage, current and power of the PSU.
+           @return A tuple containing
+                   0: voltage
+                   1: amps
+                   2: watts"""
+        rr = self._client.read_register(self.OUTPUT_VOLTAGE_REG_ADDR, 4, unit=self._unit, slave=self.slave)
+        voltage = float(rr.getRegister(0))
+        if voltage > 0:
+            voltage=voltage/100.0
+        amps = float(rr.getRegister(1))
+        if amps > 0:
+            amps=amps/1000.0
+        wattsH = rr.getRegister(2)
+        wattsL = rr.getRegister(3)
+        watts = wattsH<<16|wattsL
+        if watts > 0:
+            watts=watts/1000.0
+        return (voltage, amps, watts)
 
+    def getTargetVolts(self):
+        """@brief Read the target output voltage
+           @return The output voltage set in volts."""
+        rr = self._client.read_register(self.VOLTAGE_TARGET_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        voltage = float(rr.getRegister(0))
+        if voltage > 0:
+            voltage=voltage/100.0
+        return voltage
 
+    def getCurrentLimit(self):
+        """@brief Read the current limit in amps
+           @return The current limit."""
+        rr = self._client.read_register(self.CURRENT_LIMIT_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        amps = float(rr.getRegister(0))
+        if amps > 0:
+            amps=amps/1000.0
+        return amps
 
+    def getProtectionValues(self):
+        """@brief Read the over voltage, current and power protection values
+           @return A tuple containing
+                   0: over voltage protection value
+                   1: over current protection value
+                   2: over power protection value"""
+        rr = self._client.read_register(self.OVER_VOLTAGE_PROT_REG_ADDR, 4, unit=self._unit, slave=self.slave)
+        voltage = float(rr.getRegister(0))
+        if voltage > 0:
+            voltage=voltage/100.0
+        amps = float(rr.getRegister(1))
+        if amps > 0:
+            amps=amps/1000.0
+        wattsH = rr.getRegister(2)
+        wattsL = rr.getRegister(3)
+        watts = float(wattsH<<16|wattsL)
+        if watts > 0:
+            watts=watts/1000.0
+        return (voltage, amps, watts)
 
-
-    # def getProtectionState(self):
-    #     """@brief Get the state of the protections switch.
-    #        @return 1 if protection mode is enabled, else 0."""
-    #     rr = self.interface.read_register(self.PROTECTION_STATE_REG_ADDR, 1, unit=self._unit)
-    #     return rr.getRegister(0)
-
-    # def getModel(self):
-    #     """@brief Get the model ID
-    #        @return The model ID value"""
-    #     rr = self.interface.read_register(self.MODEL_ID_REG_ADDR, 1, unit=self._unit)
-    #     return rr.getRegister(0)
-
-    # def getOutputStats(self):
-    #     """@brief Read the output voltage, current and power of the PSU.
-    #        @return A tuple containing
-    #                0: voltage
-    #                1: amps
-    #                2: watts"""
-    #     rr = self.interface.read_register(self.OUTPUT_VOLTAGE_REG_ADDR, 4, unit=self._unit)
-    #     voltage = float(rr.getRegister(0))
-    #     if voltage > 0:
-    #         voltage=voltage/100.0
-    #     amps = float(rr.getRegister(1))
-    #     if amps > 0:
-    #         amps=amps/1000.0
-    #     wattsH = rr.getRegister(2)
-    #     wattsL = rr.getRegister(3)
-    #     watts = wattsH<<16|wattsL
-    #     if watts > 0:
-    #         watts=watts/1000.0
-    #     return (voltage, amps, watts)
-
-    # def getTargetVolts(self):
-    #     """@brief Read the target output voltage
-    #        @return The output voltage set in volts."""
-    #     rr = self.interface.read_register(self.VOLTAGE_TARGET_REG_ADDR, 1, unit=self._unit)
-    #     voltage = float(rr.getRegister(0))
-    #     if voltage > 0:
-    #         voltage=voltage/100.0
-    #     return voltage
-
-    # def getCurrentLimit(self):
-    #     """@brief Read the current limit in amps
-    #        @return The current limit."""
-    #     rr = self.interface.read_register(self.CURRENT_LIMIT_REG_ADDR, 1, unit=self._unit)
-    #     amps = float(rr.getRegister(0))
-    #     if amps > 0:
-    #         amps=amps/1000.0
-    #     return amps
-
-    # def getProtectionValues(self):
-    #     """@brief Read the over voltage, current and power protection values
-    #        @return A tuple containing
-    #                0: over voltage protection value
-    #                1: over current protection value
-    #                2: over power protection value"""
-    #     rr = self.interface.read_register(self.OVER_VOLTAGE_PROT_REG_ADDR, 4, unit=self._unit)
-    #     voltage = float(rr.getRegister(0))
-    #     if voltage > 0:
-    #         voltage=voltage/100.0
-    #     amps = float(rr.getRegister(1))
-    #     if amps > 0:
-    #         amps=amps/1000.0
-    #     wattsH = rr.getRegister(2)
-    #     wattsL = rr.getRegister(3)
-    #     watts = float(wattsH<<16|wattsL)
-    #     if watts > 0:
-    #         watts=watts/1000.0
-    #     return (voltage, amps, watts)
-
-    # def getBuzzer(self):
-    #     """@brief Get the state of the buzzer
-    #        @return 1 if enabled, 0 if disabled."""
-    #     rr = self.interface.read_register(self.BUZZER_REG_ADDR, 1, unit=self._unit)
-    #     return rr.getRegister(0)
-
-    # ### WRITE REGS ###
-    # def setOutput(self, on):
-    #     """@brief Set The PSU output on/off.
-    #        @param on If True the PSU output is on."""
-    #     self.interface.write_register(self.OUTPUT_STATE_REG_ADDR , on, unit=self._unit)
-
-    # def setVoltage(self, voltage):
-    #     """@brief Set the output voltage.
-    #        @param voltage The voltage in volts (a float value)."""
-    #     if voltage < self.MIN_VOLTAGE or voltage > self.MAX_VOLTAGE:
-    #         raise ValueError("{} is an invalid voltage (valid range {}V - {}V)".format(voltage, self.MIN_VOLTAGE, self.MAX_VOLTAGE))
-    #     self.interface.write_register(self.VOLTAGE_TARGET_REG_ADDR , int(voltage*100.0), unit=self._unit)
-
-    # def setCurrentLimit(self, amps):
-    #     """@brief Set the current limit value.
-    #        @param amps The current in amps (a float value)."""
-    #     if amps < 0.0 or amps > self.MAX_CURRENT:
-    #         raise ValueError("{} is an invalid current value (valid range 0A - {}A)".format(amps, self.MAX_CURRENT))
-    #     self.interface.write_register(self.CURRENT_LIMIT_REG_ADDR , int(amps*1000.0), unit=self._unit)
-
-    # def setOverVoltageP(self, voltage):
-    #     """@brief Set the over voltage protection value.
-    #        @param voltage The voltage in volts (a float value)."""
-    #     if voltage < self.MIN_VOLTAGE or voltage > self.MAX_OVER_VOLTAGE:
-    #         raise ValueError("{} is an invalid voltage (valid range {}V - {}V)".format(voltage, self.MIN_VOLTAGE, self.MAX_VMAX_OVER_VOLTAGEOLTAGE))
-    #     self.interface.write_register(self.OVER_VOLTAGE_PROT_REG_ADDR , int(voltage*100.0), unit=self._unit)
-
-    # def setOverCurrentP(self, amps):
-    #     """@brief Set the over current protection value.
-    #        @param amps The current in amps (a float value)."""
-    #     if amps < 0.0 or amps > self.MAX_OVER_CURRENT:
-    #         raise ValueError("{} is an invalid voltage (valid range 0V - {}V)".format(amps, self.MAX_OVER_CURRENT))
-    #     self.interface.write_register(self.OVER_CURRENT_PROT_REG_ADDR , int(amps*1000.0), unit=self._unit)
-
-    # def setOverPowerP(self, watts):
-    #     """@brief Set the over power protection value.
-    #        @param watts The power in watts (a float value)."""
-    #     if watts < 0.0 or watts > self.MAX_OVER_POWER:
-    #         raise ValueError("{} is an invalid power (valid range 0W - {}W)".format(watts, self.MAX_OVER_POWER))
-    #     wattValue = int((watts*1000))
-    #     wattsL = wattValue&0x0000ffff
-    #     wattsH = (wattValue&0xffff0000)>>16
-    #     self.interface.write_register(self.OVER_PWR_PROT_HI_REG_ADDR , wattsH, unit=self._unit)
-    #     self.interface.write_register(self.OVER_PWR_PROT_LOW_REG_ADDR , wattsL, unit=self._unit)
-
-    # def setBuzzer(self, on):
-    #     """@brief Set the buzzer on/off.
-    #        @param on If True the buzzer is set on, 0 = off."""
-    #     self.interface.write_register(self.BUZZER_REG_ADDR , on, unit=self._unit)
+    def getBuzzer(self):
+        """@brief Get the state of the buzzer
+           @return 1 if enabled, 0 if disabled."""
+        rr = self._client.read_register(self.BUZZER_REG_ADDR, 1, unit=self._unit, slave=self.slave)
+        return rr.getRegister(0)
