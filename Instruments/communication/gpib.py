@@ -1,6 +1,8 @@
 import pyvisa
 import sys
 
+from Instruments.communication.scpi import scpi
+
 class GPIBInterface:
     def __init__(self, **kwargs):
         # Extrahiere die Adresse aus den übergebenen Parametern
@@ -59,3 +61,6 @@ class GPIBInterface:
 
     def write(self, command):
         self.device.write(command)  # Sende den Befehl an das Gerät
+
+    def identification(self):
+        return scpi.identification(self)

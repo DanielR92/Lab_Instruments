@@ -63,23 +63,22 @@ class Device:
     OVER_PWR_PROT_LOW_REG_ADDR  = 0x0023    #Bottom 16 bits of over power protection
     BUZZER_REG_ADDR             = 0x8804    # 1 = enable (beep on key press), 0 = disable
 
-    def __init__(self, interface_type, interface_info, ID):
+    def __init__(self, interface_type, interface_info, ID=1):
         self.ID = ID
 
         # Verwende das interface_info Dictionary für den Aufbau der Schnittstelle
         if interface_type == "Serial":
             from Instruments.communication.serial import SerialInterface
-            interface_info.update({'baudrate': 9600,'protocol': 'rtu'})
+            interface_info.update({'baudrate': 9600, 'protocol': 'rtu'})
             self.interface = SerialInterface(**interface_info)
         else:
             raise ValueError(f"Unbekannter Schnittstellentyp: {interface_type}")
-            return;
         self._connect()
 
     def _connect(self):
-        """Verbindet mit dem Gerät."""
+        """@brief connect to the PSU over the serial port."""
+        self.interface = ModbusSerialClient(method='rtu', port=self.interface.port, baudrate=9600, stopbits=1, bytesize=8, timeout=1) 
         self.interface.connect()
-        print(f"Verbinde mit Gerät über {self.interface} mit ID {self.ID}.")
 
     def disconnect(self):
         """Trennt die Verbindung zum Gerät."""

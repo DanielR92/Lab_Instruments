@@ -130,6 +130,10 @@ class Device:
             msg = "Error!"
         print("Selbst Test: " + msg)
 
+    # Liest die Identifikation des Geräts aus.
+    def identification(self):
+        return self.interface.identification()
+    
     # Setzt den Modus des Geräts.
     def set_mode(self, mode):
         #if isinstance(mode, Enum):

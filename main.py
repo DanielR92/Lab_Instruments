@@ -9,11 +9,13 @@ instruments = Instruments()
 
 try:
     # Dynamisch das Gerät laden und verwenden
-#    fluke_device_class = instruments.get_device('Instruments.DMM.Fluke.DMM_8845A')
-#    fluke_device = fluke_device_class(interface_type="GPIB", interface_info={'address': 1}, ID=1)
+    # fluke_device_class = instruments.get_device('Instruments.DMM.Fluke.DMM_8845A')
+    # fluke_device = fluke_device_class(interface_type="GPIB", interface_info={'address': 1}, ID=1)
+    
+    #fluke_device.identification()
 
     powersupply_device_class = instruments.get_device('Instruments.PowerSupply.RS310P')
-    powersupply_device = powersupply_device_class(interface_type="Serial", interface_info={'port': "COM18"}, ID=1)
+    powersupply_device = powersupply_device_class(interface_type="Serial", interface_info={'port': "COM18"})
 
     powersupply_device.set_voltage(5.0)
 
@@ -23,9 +25,6 @@ try:
 #    print(fluke_device.is_combination_allowed("Limit", "Cap")) # Sollte 'Yes' zurückgeben
 #    print(fluke_device.is_combination_allowed("Average", "Cont")) # Sollte 'No' zurückgeben
 
-
-    # Gerät identifizieren
-#    print("Device ID:", fluke_device.identify())
 
 
     # Selbsttest durchführen
