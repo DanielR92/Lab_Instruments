@@ -1,4 +1,4 @@
-# Lab Instruments Control
+# Fluke 8845A
 
 Dieses teil des Projekts bietet ein Treiber zur Steuerung und Verwaltung von Labor Instrumenten. Es enthält Klassen und Methoden zur Interaktion mit verschiedenen Messgeräten und Stromversorgungen.
 
