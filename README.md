@@ -22,9 +22,16 @@ Bitte beachten Sie, dass dieses Projekt noch Fehler enthalten kann und nicht vol
 
 ## Treiber-Fortschritt
 
+### Digital Multimeter (DMM)
+
 | Gerät         | Fortschritt          |
 |---------------|----------------------|
 | Fluke 8845A   | ✅ Grundfunktionen implementiert |
+
+### Power Supply
+
+| Gerät         | Fortschritt          |
+|---------------|----------------------|
 | RS310P        | ✅ Grundfunktionen implementiert |
 
 ## Installation
