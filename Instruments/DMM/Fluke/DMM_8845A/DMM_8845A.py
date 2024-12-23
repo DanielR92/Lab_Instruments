@@ -41,6 +41,13 @@ class Device:
         print(f"Messwert für {mode.name}: {result}")
         return result
     
+    def get_function(self, func=1):
+        '''Meter returns the function selected for the primary display as command mnemonic..'''
+        if (func == 1):
+            return self.interface.query("FUNC1?")
+        elif (func == 2):
+            return self.interface.query("FUNC2?")
+    
     def configure_range(self, mode: MeasurementMode, range_value: float):
         """
         Konfiguriert den Messbereich.
@@ -196,7 +203,7 @@ class Device:
         self._setAperture("FREQ", aperture.value)
         return self._get(MeasurementMode.FREQUENCY)
     
-    def sense_measure(self, cmd):
+    def _Query(self, cmd):
         return self.interface.query(cmd)  
     
     def get_ROUTE(self):
@@ -220,3 +227,35 @@ class Device:
         # Rückgabe des Werts aus der Matrix
         result = math_function_matrix[math_function][meter_function]
         return f"Erlaubt: {result}"
+
+    def ShowText(self, msg):
+        self.Disp_Clear()
+        text = "DISP:TEXT\s\"{hier}\""
+        self.interface.write(text.format(hier=msg))
+    
+    def Disp_Clear(self):
+        self.interface.write("DISP:CLE")    # Clear the display
+    
+    def Beep(self):
+        self.interface.write("SYST:BEEP")    # Beep the device
+    
+    def set_Beeper(self, state):
+        if (state):
+            self.interface.write("SYST:BEEP:STAT ON")
+        else:
+            self.interface.write("SYST:BEEP:STAT OFF")
+        
+        return self._Query("SYST:BEEP:STAT?")
+    
+    def SCPI_Vers(self):
+        ''' Retrieves the Meter’s present SCPI command version.'''
+        return self._Query("SYST:VERS?")
+
+    def get_lastCalibration(self):
+        ''' Retrieves the date of the last calibration. '''
+        return self._Query("CAL:LAST?")
+    
+    def set_Range(self, range):
+        # VOLTage:DC:RANGe {<range>|MINimum|MAXimum}
+        mode = self.get_function()  # get the current function
+        self._Query("VOLT:DC:RANGE?")

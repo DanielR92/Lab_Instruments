@@ -63,8 +63,8 @@ class Device:
     OVER_PWR_PROT_LOW_REG_ADDR  = 0x0023    #Bottom 16 bits of over power protection
     BUZZER_REG_ADDR             = 0x8804    # 1 = enable (beep on key press), 0 = disable
 
-    def __init__(self, interface_type, interface_info, ID=1, slave=1):
-        self._unit = ID
+    def __init__(self, interface_type, interface_info, unit=1, slave=1):
+        self._unit = unit
         self.slave= slave
 
         # Verwende das interface_info Dictionary für den Aufbau der Schnittstelle
@@ -83,8 +83,13 @@ class Device:
 
     def disconnect(self):
         """Trennt die Verbindung zum Gerät."""
-        self._client.disconnect()
-        print("Verbindung zum Gerät getrennt.")
+        if (self.getOutput()):
+            self.setOutput(0)   # Output is on, turn it off before disconnecting
+        else:
+            print("Device is off. Disconnecting...")    # Device is off, no need to disconnect
+
+        self._client.close()
+        print("Disconnected from the device")
 
     def get_actual_voltage(self):
         raw_value = self._client.read_holding_registers(self.OUTPUT_VOLTAGE_REG_ADDR, slave=1)

@@ -32,8 +32,8 @@ class SerialInterface:
         self.rm.reset()
         print(f"Reset Serial connection at port {self.port}")
         
-    def write_register(self, address, data, unit):
-        self.rm.write_register(address, data, unit)
+    def write_register(self, address, data, slave):
+        self.rm.write_register(address, data, slave)
         
     def read_register(self, address):
         return self.rm.read_register(address)
