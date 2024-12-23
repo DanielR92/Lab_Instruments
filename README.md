@@ -20,6 +20,13 @@ Dieses Projekt ist eine Python-basierte Bibliothek zur Steuerung von Laborinstru
 
 Bitte beachten Sie, dass dieses Projekt noch Fehler enthalten kann und nicht vollumfänglich integriert ist. Wir arbeiten jedoch kontinuierlich daran, die Funktionalität zu verbessern und Fehler zu beheben.
 
+## Treiber-Fortschritt
+
+| Gerät         | Fortschritt          |
+|---------------|----------------------|
+| Fluke 8845A   | ✅ Grundfunktionen implementiert |
+| RS310P        | ✅ Grundfunktionen implementiert |
+
 ## Installation
 
 1. Repository klonen:
