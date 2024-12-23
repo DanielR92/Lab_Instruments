@@ -3,6 +3,7 @@ import os
 
 from Instruments.DMM.Fluke.DMM_8845A.constants import MeasurementMode
 from Instruments.DMM.Fluke.DMM_8845A.constants import math_function_matrix
+from Instruments.DMM.Fluke.DMM_8845A.error_codes import ERROR_CODES
 
 class Device:
     """Repräsentiert das Fluke 8845A Multimeter."""
@@ -174,11 +175,21 @@ class Device:
     def set_Local(self):
         self.set_mode("SYST:LOC")
 
-    def set_Beep(self, mode):
+    def set_Beep(self, mode, error=False):
+        ''' Setzt den Beeper-Modus für das System. 
+        :param mode: True/False (On/Off)
+        :param error: True/False (Enable or disables the Meter’s beeper for error messages. This setting is stored in volatile memory)
+        '''
+
+        beep = "SYST:BEEP:STAT"
+
+        if (error):
+            beep = "SYST:ERR:BEEP"
+
         if (mode):
-            self.set_mode("SYST:BEEP:STAT ON")
+            self.set_mode(beep + " ON")
         else:
-            self.set_mode("SYST:BEEP:STAT OFF")
+            self.set_mode(beep + " OFF")
 
     # Führt eine Messung durch
     def _get(self, mode):
@@ -288,3 +299,28 @@ class Device:
         self.set_mode("VOLT:DC")
         self.set_Range(range)
         self.set_mode("VOLT:DC:RES " + resolution)
+
+    def Error(self):
+        '''
+        Retrieves the error message from the Meter's error queue.
+        Matches the error code with its details and returns a detailed error message.
+        '''
+        response = self._Query("SYST:ERR?")
+        
+        try:
+            error_code, error_message = response.split(',', 1)
+            error_code = int(error_code)
+            error_message = error_message.strip().strip('"')
+
+            
+            # Fehlercode nachschlagen
+            error_details = ERROR_CODES.get(error_code, {
+                "text": "Unknown error",
+                "description": "No further details available.",
+            })
+            
+            print(f"Error {error_code}: {error_message}\n"
+                    f"Description: {error_details['text']}\n"
+                    f"Details: {error_details['description']}")
+        except ValueError:
+            return f"Unexpected response format: {response}"

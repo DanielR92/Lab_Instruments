@@ -13,6 +13,7 @@ try:
     # Dynamisch das Gerät laden und verwenden
     fluke_device_class = instruments.get_device('Instruments.DMM.Fluke.DMM_8845A')
     fluke_device = fluke_device_class(interface_type="GPIB", interface_info={'address': 1}, ID=1)
+    fluke_device.Error()
 
 
     #fluke_device.set_Beep(1)
@@ -24,8 +25,6 @@ try:
     powersupply_device = powersupply_device_class(interface_type="Serial", interface_info={'port': "COM18"})
 
     powersupply_device.setLConfig(volt=10, current=0.1, OVP=15, OCP=0.5, OPP=12)
-
-
 
 
     # Überprüfe, ob bestimmte Kombinationen erlaubt sind
