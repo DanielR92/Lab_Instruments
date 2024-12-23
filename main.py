@@ -14,7 +14,6 @@ try:
     fluke_device_class = instruments.get_device('Instruments.DMM.Fluke.DMM_8845A')
     fluke_device = fluke_device_class(interface_type="GPIB", interface_info={'address': 1}, ID=1)
 
-    fluke_device.
 
     #fluke_device.set_Beep(1)
     #fluke_device.set_Beep(0)

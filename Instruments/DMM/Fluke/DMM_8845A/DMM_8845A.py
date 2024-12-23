@@ -6,10 +6,21 @@ from Instruments.DMM.Fluke.DMM_8845A.constants import math_function_matrix
 
 class Device:
     """Repräsentiert das Fluke 8845A Multimeter."""
+
+    @property
+    def name(self):
+        """Gibt den Namen zurück (read-only)."""
+        return self._name
     
     def __init__(self, interface_type, interface_info, ID):
         self.ID = ID
         self.constants = self._load_constants()  # Lade die constants.py automatisch
+
+        self._manufacturer  = None
+        self._model         = None
+        self._serialnumber  = None
+        self._SWversion     = None
+        self._SWDispVersion = None
 
         # Verwende das interface_info Dictionary für den Aufbau der Schnittstelle
         if interface_type == "GPIB":
@@ -25,6 +36,18 @@ class Device:
             raise ValueError(f"Unbekannter Schnittstellentyp: {interface_type}")
             return;
         self.connect()
+        self.reset()
+        self.Identification()
+
+    def Identification(self):
+        ''' Retrieves the Meter’s identification. '''
+        IDN = self.interface.query("*IDN?").split(",")
+        self._manufacturer  = IDN[0]
+        self._model         = IDN[1]
+        self._serialnumber  = IDN[2]
+        self._SWversion     = IDN[3]
+        #self._SWDispVersion = teile[4]
+        return IDN
 
     def measure(self, mode: MeasurementMode):
         """
@@ -247,7 +270,7 @@ class Device:
         
         return self._Query("SYST:BEEP:STAT?")
     
-    def SCPI_Vers(self):
+    def SCPI_Version(self):
         ''' Retrieves the Meter’s present SCPI command version.'''
         return self._Query("SYST:VERS?")
 
@@ -259,3 +282,9 @@ class Device:
         # VOLTage:DC:RANGe {<range>|MINimum|MAXimum}
         mode = self.get_function()  # get the current function
         self._Query("VOLT:DC:RANGE?")
+
+    def conf_DCV(self, range, resolution):
+        ''' Configures the Meter for DC voltage measurements. '''
+        self.set_mode("VOLT:DC")
+        self.set_Range(range)
+        self.set_mode("VOLT:DC:RES " + resolution)
