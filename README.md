@@ -26,13 +26,14 @@ Bitte beachten Sie, dass dieses Projekt noch Fehler enthalten kann und nicht vol
 
 | Gerät         | Fortschritt          |
 |---------------|----------------------|
-| Fluke 8845A   | ✅ Grundfunktionen implementiert |
+| [Fluke 8845A](https://github.com/DanielR92/Lab_Instruments/tree/main/Instruments/DMM/Fluke/DMM_8845A)   | ✅ Grundfunktionen implementiert |
+
 
 ### Power Supply
 
 | Gerät         | Fortschritt          |
 |---------------|----------------------|
-| RS310P        | ✅ Grundfunktionen implementiert |
+| [RS310P](https://github.com/DanielR92/Lab_Instruments/tree/main/Instruments/PowerSupply/RS310P)        | ✅ Grundfunktionen implementiert |
 
 ## Installation
 
