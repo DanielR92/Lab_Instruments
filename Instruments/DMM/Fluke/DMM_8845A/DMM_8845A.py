@@ -14,6 +14,7 @@ class Device:
         return self._name
     
     def __init__(self, interface_type, interface_info, ID):
+        print("[Init:Start]-----------------------------")
         self.ID = ID
         self.constants = self._load_constants()  # Lade die constants.py automatisch
 
@@ -39,6 +40,7 @@ class Device:
         self.connect()
         self.reset()
         self.Identification()
+        print("[Init:Done]-----------------------------")
 
     def Identification(self):
         ''' Retrieves the Meter’s identification. '''
@@ -197,6 +199,12 @@ class Device:
             mode = mode.value
         return self.interface.query("MEAS:" + mode + "?")  # Übergabe des Befehls an das Interface  
 
+    def get_MinMaxRange(self):
+        func = self.get_function().strip().replace("\"", "")
+        min = float(self._Query(func + ":RANG? MIN"))
+        max = float(self._Query(func + ":RANG? MAX"))
+        return [min, max]
+
     def get_VolatgeDC(self):
         return self._get(MeasurementMode.VOLTAGE_DC)
     
@@ -217,7 +225,15 @@ class Device:
     def get_CurrentAC(self):
         return self._get(MeasurementMode.CURRENT_AC)
 
-    def get_Resistor2W(self):
+    def get_Resistor2W(self, range=0, filter=0):
+        # RES:RANG 20e3 Sets the Meter’s ohms to the 100 kΩ range.
+        self.set_mode("MEAS:RES?")  # TODO: set to only Ohm meas... now workaround
+
+        [min,max] = self.get_MinMaxRange()
+        if (range < min or range > max):
+            return "Range out of bounds"
+        
+        #self.set_mode("RES:RANG 20e3")
         return self._get(MeasurementMode.TWO_WIRE_RESISTANCE)
 
     def get_Resistor4W(self):
@@ -305,22 +321,29 @@ class Device:
         Retrieves the error message from the Meter's error queue.
         Matches the error code with its details and returns a detailed error message.
         '''
-        response = self._Query("SYST:ERR?")
         
-        try:
-            error_code, error_message = response.split(',', 1)
-            error_code = int(error_code)
-            error_message = error_message.strip().strip('"')
+        
+        response = ""
+        while response != '+0,"No error"\n':
+            try:
+                response = self._Query("SYST:ERR?")
+                error_code, error_message = response.split(',', 1)
+                error_code = int(error_code)
+                error_message = error_message.strip().strip('"')
 
-            
-            # Fehlercode nachschlagen
-            error_details = ERROR_CODES.get(error_code, {
-                "text": "Unknown error",
-                "description": "No further details available.",
-            })
-            
-            print(f"Error {error_code}: {error_message}\n"
-                    f"Description: {error_details['text']}\n"
-                    f"Details: {error_details['description']}")
-        except ValueError:
-            return f"Unexpected response format: {response}"
+                if error_code == 0:
+                    return [error_code, error_message]
+                
+                print("-----------------------------")
+
+                # Fehlercode nachschlagen
+                error_details = ERROR_CODES.get(error_code, {
+                    "text": "Unknown error",
+                    "description": "No further details available.",
+                })
+                
+                print(f"Error {error_code}: {error_message}\n"
+                        f"Description: {error_details['text']}\n"
+                        f"Details: {error_details['description']}")
+            except ValueError:
+                return f"Unexpected response format: {response}"
