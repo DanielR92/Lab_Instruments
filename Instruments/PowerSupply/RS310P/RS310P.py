@@ -244,3 +244,9 @@ class Device:
            @return 1 if enabled, 0 if disabled."""
         rr = self._client.read_holding_registers(self.BUZZER_REG_ADDR, 1, unit=self._unit, slave=self.slave)
         return rr.getRegister(0)
+    
+    if __name__ == "__main__":
+        print("This module is not intended to run standalone.")
+        print("Please import it in your main program.")
+        print("Exiting...")
+        exit(1)

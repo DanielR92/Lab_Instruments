@@ -347,3 +347,9 @@ class Device:
                         f"Details: {error_details['description']}")
             except ValueError:
                 return f"Unexpected response format: {response}"
+
+    if __name__ == "__main__":
+        print("This module is not intended to run standalone.")
+        print("Please import it in your main program.")
+        print("Exiting...")
+        exit(1)
