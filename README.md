@@ -94,8 +94,4 @@ powersupply_device.disconnect()
 
 ## Beitrag
 
-Beiträge sind willkommen! Bitte zögern Sie nicht, einen Pull Request einzureichen.
-
-## Lizenz
-
-Dieses Projekt ist unter der MIT-Lizenz lizenziert.
+Beiträge sind willkommen! Bitte zögere nicht, einen Pull Request einzureichen.
