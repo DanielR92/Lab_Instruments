@@ -63,7 +63,20 @@ class Device:
     OVER_PWR_PROT_LOW_REG_ADDR  = 0x0023    #Bottom 16 bits of over power protection
     BUZZER_REG_ADDR             = 0x8804    # 1 = enable (beep on key press), 0 = disable
 
+    @property
+    def res_volt(self):
+        return 0.01  # Auflösung für Spannungsmessung
+
+    @property
+    def res_curr(self):
+        return 0.01  # Auflösung für Strommessung
+
+    @property
+    def res_power(self):
+        return 0.001  # Auflösung für Leistungsmessung
+
     def __init__(self, interface_type, interface_info, unit=1, slave=1):
+        print("[Init:Start]-----------------------------")
         self._unit = unit
         self.slave= slave
 
@@ -75,6 +88,21 @@ class Device:
         else:
             raise ValueError(f"Unbekannter Schnittstellentyp: {interface_type}")
         self._connect()
+        self.Identification()
+        print("[Init:Done]-----------------------------")
+
+    def __del__(self):
+        print("Delete Module 'RS310P' ... ", end=" ")
+        self.disconnect()
+        print(" ... done.")
+
+    def Identification(self):
+        ''' Retrieves the Meter’s identification. '''
+        self._manufacturer  = "Rockseed"
+        self._model         = "RS310P"
+        self._serialnumber  = 0
+        self._SWversion     = 0
+        #self._SWDispVersion = teile[4]
 
     def _connect(self):
         """@brief connect to the PSU over the serial port."""
@@ -86,10 +114,10 @@ class Device:
         if (self.getOutput()):
             self.setOutput(0)   # Output is on, turn it off before disconnecting
         else:
-            print("Device is off. Disconnecting...")    # Device is off, no need to disconnect
+            print("Device is already off.", end=" ")    # Device is off, no need to disconnect
 
         self._client.close()
-        print("Disconnected from the device")
+        print("disconnected " + str(self._model), end=" ")
 
     def get_actual_voltage(self):
         raw_value = self._client.read_holding_registers(self.OUTPUT_VOLTAGE_REG_ADDR, slave=1)
@@ -114,7 +142,7 @@ class Device:
 
 
     ### WRITE REGS ###
-    def setLConfig(self, volt, current, OVP, OCP, OPP, output=1):
+    def setConfig(self, volt, current, OVP, OCP, OPP, output=1):
         """@brief Set the PSU configuration.
         @param value The configuration value."""
         self.setVoltage(volt)
@@ -167,7 +195,7 @@ class Device:
         """@brief Get the state of the PSU output.
            @return 1 if the output is on, else 0."""
         rr = self._client.read_holding_registers(self.OUTPUT_STATE_REG_ADDR, 1, unit=self._unit, slave=self.slave)
-        return rr.getRegister(0)
+        return bool(rr.getRegister(0))
     
     def getProtectionState(self):
         """@brief Get the state of the protections switch.

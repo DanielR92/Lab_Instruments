@@ -1,9 +1,18 @@
 import importlib
 import os
+from time import sleep
 
 from Instruments.DMM.Fluke.DMM_8845A.constants import MeasurementMode
 from Instruments.DMM.Fluke.DMM_8845A.constants import math_function_matrix
 from Instruments.DMM.Fluke.DMM_8845A.error_codes import ERROR_CODES
+
+# TODO: 
+    # Überprüfe, ob bestimmte Kombinationen erlaubt sind
+    #    print(fluke_device.is_combination_allowed("Null", "DCV"))  # Sollte 'Yes' zurückgeben
+    #    print(fluke_device.is_combination_allowed("dB", "Freq"))   # Sollte 'No' zurückgeben
+    #    print(fluke_device.is_combination_allowed("Limit", "Cap")) # Sollte 'Yes' zurückgeben
+    #    print(fluke_device.is_combination_allowed("Average", "Cont")) # Sollte 'No' zurückgeben
+
 
 class Device:
     """Repräsentiert das Fluke 8845A Multimeter."""
@@ -40,7 +49,13 @@ class Device:
         self.connect()
         self.reset()
         self.Identification()
+        self.Error()
         print("[Init:Done]-----------------------------")
+
+    def __del__(self):
+        print("Delete Module 'DMM_8845A' ... ", end=" ")
+        self.disconnect()
+        print(" ... done.")
 
     def Identification(self):
         ''' Retrieves the Meter’s identification. '''
@@ -147,7 +162,7 @@ class Device:
     def disconnect(self):
         """Trennt die Verbindung zum Gerät."""
         self.interface.disconnect()
-        print("Verbindung zum Gerät getrennt.")
+        print("disconnected " + self._model, end=" ")
 
     def reset(self):
         """Setzt das Gerät zurück."""
@@ -206,17 +221,17 @@ class Device:
         return [min, max]
 
     def get_VolatgeDC(self):
-        return self._get(MeasurementMode.VOLTAGE_DC)
+        return float(self._get(MeasurementMode.VOLTAGE_DC))
     
     def get_VolatgeDC_Ratio(self):
         return self._get(MeasurementMode.VOLTAGE_DC_RATIO)
     
     def get_VolatgeAC(self):
-        return self._get(MeasurementMode.VOLTAGE_AC)
+        return float(self._get(MeasurementMode.VOLTAGE_AC))
     
     def get_CurrentDC_mA(self):
         self.set_mode()
-        return self._get(MeasurementMode.CURRENT_DC)
+        return float(self._get(MeasurementMode.CURRENT_DC))
     
     def get_CurrentDC_10A(self):
         self.set_mode()
@@ -234,10 +249,10 @@ class Device:
             return "Range out of bounds"
         
         #self.set_mode("RES:RANG 20e3")
-        return self._get(MeasurementMode.TWO_WIRE_RESISTANCE)
+        return float(self._get(MeasurementMode.TWO_WIRE_RESISTANCE))
 
     def get_Resistor4W(self):
-        return self._get(MeasurementMode.FOUR_WIRE_RESISTANCE)
+        return float(self._get(MeasurementMode.FOUR_WIRE_RESISTANCE))
 
     def get_Continuity(self):
         return self._get(MeasurementMode.CONTINUITY)
@@ -251,7 +266,7 @@ class Device:
 
     def get_Frquency(self, aperture):
         self._setAperture("FREQ", aperture.value)
-        return self._get(MeasurementMode.FREQUENCY)
+        return float(self._get(MeasurementMode.FREQUENCY))
     
     def _Query(self, cmd):
         return self.interface.query(cmd)  
@@ -322,9 +337,10 @@ class Device:
         Matches the error code with its details and returns a detailed error message.
         '''
         
-        
+        print("[Check of Error]------------------------------")
         response = ""
         while response != '+0,"No error"\n':
+            sleep(0.2)  # wait a little bit
             try:
                 response = self._Query("SYST:ERR?")
                 error_code, error_message = response.split(',', 1)
