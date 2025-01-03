@@ -2,6 +2,9 @@
 
 Dieses Projekt ist eine Python-basierte Bibliothek zur Steuerung von Laborinstrumenten wie dem Fluke 8845A Multimeter und dem RS310P Netzteil. Es ermöglicht die Kommunikation mit diesen Geräten über verschiedene Schnittstellen (GPIB, Seriell, TCPIP) und bietet eine Vielzahl von Funktionen für Messungen und Konfigurationen.
 
+> [!WARNING]  
+> This repo is currently in heavy development.
+
 ## Funktionen
 
 - **Schnittstellen**: Unterstützung für die Kommunikation mit verschiedenen Messgeräten (z.B. Fluke 8845A) über GPIB, serielle Schnittstellen oder TCP/IP.
@@ -95,3 +98,20 @@ powersupply_device.disconnect()
 ## Beitrag
 
 Beiträge sind willkommen! Bitte zögere nicht, einen Pull Request einzureichen.
+
+
+
+
+
+Streamline your IPTV experience by consolidating multiple M3U playlists into a single source with the blazingly fast 🔥 and lightweight M3U Stream Merger Proxy. This service acts as a modern HTTP proxy server, effortlessly merging and streaming content from various M3U sources.
+
+Uses the channel title or `tvg-name` (as fallback) to merge multiple identical channels into one. This is not an xTeVe/Threadfin replacement but is often used with it.
+
+> [!IMPORTANT]  
+> Under construction
+
+> > [!NOTE]
+> Help are heavly welcome
+
+> [!TIP]
+>  =)
