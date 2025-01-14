@@ -38,6 +38,12 @@ Bitte beachten Sie, dass dieses Projekt noch Fehler enthalten kann und nicht vol
 |---------------|----------------------|
 | [RS310P](https://github.com/DanielR92/Lab_Instruments/tree/main/Instruments/PowerSupply/RS310P)        | ✅ Grundfunktionen implementiert |
 
+### HDMI Switch
+
+| Gerät         | Fortschritt          |
+|---------------|----------------------|
+| [VS481C](https://github.com/DanielR92/Lab_Instruments/tree/main/Instruments/Switch/Aten/VS481C)        | ✅ Grundfunktionen implementiert |
+
 ## Installation
 
 1. Repository klonen:
