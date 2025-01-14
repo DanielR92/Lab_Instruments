@@ -106,6 +106,14 @@ class Device:
             raise ValueError("Ungültige Antwort vom Gerät: 'Command OK' fehlt.")
     
     def set_output(self, flag):
+        """
+        Sets the HDMI output state.
+        Parameters:
+        flag (bool): The desired state of the HDMI output. 
+                 True to turn on the output, False to turn it off.
+        Raises:
+        ValueError: If the provided flag is not a boolean.
+        """
         if not isinstance(flag, bool):
             raise ValueError("Der Modus muss eine boolean sein.")
 
@@ -120,6 +128,18 @@ class Device:
 
     # Setzt den neuen Input des Geräts.
     def set_input(self, mode):
+        """
+        Set the input mode for the HDMI switch.
+        Parameters:
+        mode (int): The input mode to set. Must be an integer.
+        Raises:
+        ValueError: If the mode is not an integer.
+        Behavior:
+        - If mode is 0, the output is disabled.
+        - If the HDMI output is not already enabled, it will be enabled.
+        - Sends a command to the client to switch the input mode.
+        - Prints a confirmation message with the set mode.
+        """
         if not isinstance(mode, int):
             raise ValueError("Der Modus muss eine ganze Zahl sein.")
         
@@ -135,6 +155,15 @@ class Device:
 
   
     def set_POD(self, mode=False):
+        """
+        Sets the Power-On Detection (POD) mode for the HDMI switch.
+        Parameters:
+        mode (bool): If True, enables POD mode. If False, disables POD mode. Default is False.
+        Raises:
+        ValueError: If the mode is not a boolean.
+        Side Effects:
+        Updates the internal _hdmi_POD attribute and sends a command to the client to set the POD mode.
+        """
         if not isinstance(mode, bool):
             raise ValueError("Der Modus muss eine boolean sein.")
         
@@ -147,13 +176,29 @@ class Device:
 
         print(f"POD auf {self._hdmi_POD} gesetzt.")
 
-    def disable_switch(self):        
+    def disable_auto_switch(self):        
+        """
+        Disables the automatic HDMI switching mode.
+        This method sets the internal flag `_hdmi_auto` to `False` and sends a command
+        to the client to turn off the auto-switching mode. It also prints a confirmation
+        message indicating the new state of the auto-switch setting.
+        """
         self._hdmi_auto = False
         self._client.write(f"swmode off")
 
         print(f"Auto-Switch auf {self._hdmi_auto} gesetzt.")
 
     def set_priotity(self, port):
+        """
+        Set the priority for a specified port.
+        Parameters:
+        port (int): The port number to set the priority for. Must be an integer.
+        Raises:
+        ValueError: If the port is not an integer.
+        Example:
+        >>> set_priotity(1)
+        Priorität auf Port 1 gesetzt.
+        """
         if not isinstance(port, int):
             raise ValueError("Der Port muss eine ganze Zahl sein.")
         

@@ -26,6 +26,13 @@ def main():
         hdmi_switch.set_POD(True)
         hdmi_switch.set_POD(False)
 
+        hdmi_switch.set_output(True)
+        hdmi_switch.set_output(False)
+
+        hdmi_switch.disable_auto_switch()
+
+        hdmi_switch.set_priotity(3)
+
     except Exception as e:      # works on python 3.x
         logger.error('Error: %s', repr(e))
 
